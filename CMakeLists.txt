@@ -196,21 +196,23 @@ set(ENCODER_LIB_HDR_LIST
     transcoder/basisu.h
 )
 
-if (BASISU_ZSTD)
-    set(ENCODER_LIB_SRC_LIST ${ENCODER_LIB_SRC_LIST} zstd/zstd.c)
-    set(ENCODER_LIB_HDR_LIST ${ENCODER_LIB_HDR_LIST} zstd/zstd.h)
-endif()
-
 # Create the static library
 add_library(basisu_encoder STATIC ${ENCODER_LIB_SRC_LIST} ${ENCODER_LIB_HDR_LIST})
 
 target_include_directories(basisu_encoder
 INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd> # So KTX-Software can use it.
 )
 # PUBLIC so it will be exported to dependent programs.
 target_compile_features(basisu_encoder PUBLIC cxx_std_17)
+
+if (BASISU_ZSTD)
+    include("external/zstd.cmake")
+    target_link_libraries(
+        basisu_encoder PRIVATE
+        zstd::libzstd
+    )
+endif()
 
 if (EMSCRIPTEN)
     target_compile_definitions(basisu_encoder PUBLIC BASISU_SUPPORT_SSE=0)
